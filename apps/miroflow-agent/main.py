@@ -29,7 +29,7 @@ async def amain(cfg: DictConfig) -> None:
 
     # Define task parameters
     task_id = "task_example"
-    task_description = "What is the title of today's arxiv paper in computer science?"
+    task_description = "今天深圳天气如何？适合出去旅游吗？请使用中文进行回答。"
     task_file_name = ""
 
     # Execute task using the pipeline
