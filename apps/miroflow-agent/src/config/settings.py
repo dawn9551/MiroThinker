@@ -59,6 +59,9 @@ OPENAI_BASE_URL = os.environ.get("OPENAI_BASE_URL", "https://api.openai.com/v1")
 TENCENTCLOUD_SECRET_ID = os.environ.get("TENCENTCLOUD_SECRET_ID")
 TENCENTCLOUD_SECRET_KEY = os.environ.get("TENCENTCLOUD_SECRET_KEY")
 
+# API for Tavily Search
+TAVILY_API_KEY = os.environ.get("TAVILY_API_KEY")
+
 # API for Summary LLM
 SUMMARY_LLM_API_KEY = os.environ.get("SUMMARY_LLM_API_KEY")
 SUMMARY_LLM_BASE_URL = os.environ.get("SUMMARY_LLM_BASE_URL")
@@ -132,6 +135,26 @@ def create_mcp_server_parameters(cfg: DictConfig, agent_cfg: DictConfig):
                         "JINA_API_KEY": JINA_API_KEY,
                         "JINA_BASE_URL": JINA_BASE_URL,
                     },
+                ),
+            }
+        )
+
+    if (
+        agent_cfg.get("tools", None) is not None
+        and "tool-tavily-search" in agent_cfg["tools"]
+    ):
+        if not TAVILY_API_KEY:
+             raise ValueError(
+                "TAVILY_API_KEY not set, tool-tavily-search will be unavailable."
+            )
+
+        configs.append(
+            {
+                "name": "tool-tavily-search",
+                "params": StdioServerParameters(
+                    command="uv",
+                    args=["run", "--with", "mcp-tavily", "python", "-m", "mcp_server_tavily"],
+                    env={"TAVILY_API_KEY": TAVILY_API_KEY},
                 ),
             }
         )
