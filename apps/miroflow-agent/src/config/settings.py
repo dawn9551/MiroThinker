@@ -27,7 +27,11 @@ SERPER_BASE_URL = os.environ.get("SERPER_BASE_URL", "https://google.serper.dev")
 
 # API for Web Scraping
 JINA_API_KEY = os.environ.get("JINA_API_KEY")
-JINA_BASE_URL = os.environ.get("JINA_BASE_URL", "https://r.jina.ai")
+JINA_BASE_URL = os.environ.get("JINA_BASE_URL")
+
+# RAG Knowledge Base Configuration
+RAG_API_URL = os.environ.get("RAG_API_URL")
+RAG_API_KEY = os.environ.get("RAG_API_KEY")
 
 # API for Linux Sandbox
 E2B_API_KEY = os.environ.get("E2B_API_KEY")
@@ -158,6 +162,27 @@ def create_mcp_server_parameters(cfg: DictConfig, agent_cfg: DictConfig):
                     env={
                         "OPENAI_API_KEY": OPENAI_API_KEY,
                         "OPENAI_BASE_URL": OPENAI_BASE_URL,
+                    },
+                ),
+            }
+        )
+
+    # RAG Knowledge Base Tool
+    if agent_cfg.get("tools", None) is not None and "tool-rag-kb" in agent_cfg["tools"]:
+        if not RAG_API_URL:
+            raise ValueError(
+                "env.RAG_API_URL not set, tool-rag-kb will be unavailable."
+            )
+        
+        configs.append(
+            {
+                "name": "tool-rag-kb",
+                "params": StdioServerParameters(
+                    command=sys.executable,
+                    args=["-m", "miroflow_tools.mcp_servers.rag_knowledge_base_mcp_server"],
+                    env={
+                        "RAG_API_URL": RAG_API_URL,
+                        "RAG_API_KEY": RAG_API_KEY or "",
                     },
                 ),
             }
@@ -468,6 +493,9 @@ def get_env_info(cfg: DictConfig) -> dict:
         "has_tencent_secret_id": bool(TENCENTCLOUD_SECRET_ID),
         "has_tencent_secret_key": bool(TENCENTCLOUD_SECRET_KEY),
         "has_summary_llm_api_key": bool(SUMMARY_LLM_API_KEY),
+        "has_tavily_api_key": bool(TAVILY_API_KEY),
+        "has_rag_api_url": bool(RAG_API_URL),
+        "has_rag_api_key": bool(RAG_API_KEY),
         # Base URLs
         "openai_base_url": OPENAI_BASE_URL,
         "anthropic_base_url": ANTHROPIC_BASE_URL,
