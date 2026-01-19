@@ -18,7 +18,6 @@ from src.config.settings import expose_sub_agents_as_tools
 from src.core.pipeline import create_pipeline_components, execute_task_pipeline
 from utils import replace_chinese_punctuation
 
-# Apply custom system prompt patch (adds MiroThinker identity)
 apply_prompt_patch()
 
 # Create global cleanup thread pool for operations that won't be affected by asyncio.cancel
@@ -37,19 +36,15 @@ _hydra_initialized = False
 
 
 def load_miroflow_config(config_overrides: Optional[dict] = None) -> DictConfig:
-    """
-    Load the full MiroFlow configuration using Hydra, similar to how benchmarks work.
-    """
     global _hydra_initialized
 
-    # Get the path to the miroflow agent config directory
     miroflow_config_dir = Path(__file__).parent.parent / "miroflow-agent" / "conf"
     miroflow_config_dir = miroflow_config_dir.resolve()
     logger.debug(f"Config dir: {miroflow_config_dir}")
 
     if not miroflow_config_dir.exists():
         raise FileNotFoundError(
-            f"MiroFlow config directory not found: {miroflow_config_dir}"
+            f"config directory not found: {miroflow_config_dir}"
         )
 
     # Initialize Hydra if not already done
@@ -95,8 +90,9 @@ def load_miroflow_config(config_overrides: Optional[dict] = None) -> DictConfig:
             f"llm.model_name={model_name}",
             f"llm.base_url={base_url}",
             f"llm.api_key={api_key}",
+            f"llm.temperature=0.8",  # Higher temperature for more exploratory behavior
             f"agent={agent_set}",
-            "agent.main_agent.max_turns=50",  # Limit max turns for gradio demo
+            "agent.main_agent.max_turns=400",  # Allow more thorough research like official site
             "benchmark=gaia-validation",  # refer to debug.sh
         ]
     )
@@ -926,10 +922,8 @@ def stop_current(ui_state: Optional[dict]):
 
 
 def build_demo():
-    # Use remote logo from dr.miromind.ai for faster page load
-
     custom_css = """
-    /* ========== MiroThinker - Modern Clean Design ========== */
+    /* ========== Modern Clean Design ========== */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     
     /* Base */
@@ -1603,48 +1597,11 @@ def build_demo():
     """
 
     # Favicon head content
-    favicon_head = '<link rel="icon" href="https://dr.miromind.ai/favicon.ico?v=2">'
-
     with gr.Blocks(
         css=custom_css,
-        title="MiroThinker - Deep Research",
+        title="Research",
         theme=gr.themes.Base(),
-        head=favicon_head,
     ) as demo:
-        # Top Navigation
-        gr.HTML("""
-            <nav class="top-nav">
-                <div class="nav-left">
-                    <div class="nav-brand">
-                        <img src="https://dr.miromind.ai/favicon.png" class="brand-logo" alt="MiroThinker" />
-                        MiroThinker
-                    </div>
-                    <div class="nav-links">
-                        <a href="https://huggingface.co/MiroMind" target="_blank">🤗</a>
-                        <a href="https://github.com/MiroMind/MiroThinker" target="_blank">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-                <div class="nav-right">
-                    <a href="https://miromind.ai" target="_blank">Visit Website</a>
-                </div>
-            </nav>
-        """)
-
-        # Hero Section
-        gr.HTML("""
-            <div class="hero-section">
-                <h1 class="hero-title">Research Deep. Uncover the Future</h1>
-                <div class="hero-subtitle">
-                    <span class="hero-line"></span>
-                    Don't just chat. Predict, verify, and discover with science-based AI.
-                    <span class="hero-line"></span>
-                </div>
-            </div>
-        """)
 
         # Input Section
         with gr.Column(elem_id="input-section"):
@@ -1685,7 +1642,7 @@ def build_demo():
         # Footer
         gr.HTML("""
             <div class="app-footer">
-                Content generated by MiroMind AI. Please verify important information.
+                Content generated by AI. Please verify important information.
             </div>
         """)
 
